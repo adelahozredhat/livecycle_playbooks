@@ -8,7 +8,7 @@
     - name: 3.4 Clonar el repositorio a testear
       ansible.builtin.git:
         # La URL de clonación debe usar el nuevo PAT
-        repo: "https://{{ git_token }}@{{ git_host }}/{{ grupo }}/{{ repo_base }}.git"
+        repo: "{{awx_webhook_payload.repository.clone_url| replace('https://','https://{{ git_token }}@')}}"
         dest: "{{ local_path }}"
         version: "{{ repo_base_branch }}"
         clone: yes
@@ -51,14 +51,6 @@
           - "{{ 'Fallo en el AnsibleLint, por favor reviselo' if ansiblelint_result.failed }}"
           - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_result.failed }}" 
       when: yamllint_result.failed or yamllint_result.failed or (molecule_result is defined and molecule_result.failed)
-
-    - name: QA Check
-      pause:
-        prompt: QA dice que todo oki Presione Intro. Presione Ctrl+c y "a" para abortar en caso contrario
-
-    - name: QA Check
-      debug:
-        msg: "QA dice que todo oki"
 
     - name: Ejecucion correcta
       ansible.builtin.debug:
@@ -203,14 +195,14 @@
           - "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
           - "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
 
-    - name: Generate gpg-sign
+    # - name: Generate gpg-sign
     
-    - name: AnsibleSign
-      ansible.builtin.expect:
-        command: ansible-sign project gpg-sign . -p 
-        responses:
-          "GPG Key Passphrase:": "PRUEBA"
-      args:
-        chdir: template_ansible_playbook_develop/
+    # - name: AnsibleSign
+    #   ansible.builtin.expect:
+    #     command: ansible-sign project gpg-sign . -p 
+    #     responses:
+    #       "GPG Key Passphrase:": "PRUEBA"
+    #   args:
+    #     chdir: template_ansible_playbook_develop/
 
-    - name: Git Push
+    # - name: Git Push

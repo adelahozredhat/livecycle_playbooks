@@ -7,6 +7,16 @@
     - vars/gpg_vars.yml
 
   tasks:
+    
+    - name: 3.4 Clonar el repositorio base localmente
+      ansible.builtin.git:
+        # La URL de clonación debe usar el nuevo PAT
+        repo: "https://{{ newly_created_pat }}@{{ git_host }}/{{ grupo }}/{{ repo_base }}.git"
+        dest: "{{ local_path }}"
+        version: "{{ repo_base_branch }}"
+        clone: yes
+        update: yes
+      when: repo_final_url is defined
 
     - name: 📁 Asegurar que el directorio GPG_HOME exista
       ansible.builtin.file:
