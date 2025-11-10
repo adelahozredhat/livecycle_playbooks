@@ -14,13 +14,13 @@
     controller_projects: "{{controller_projects_vars.controller_projects}}"
     controller_templates: "{{controller_templates_vars.controller_templates}}"
   pre_tasks:
-    - degub:
+    - debug:
         msg: "controller_schedules"
-    - degub:
+    - debug:
         msg: "controller_projects"
-    - degub:
+    - debug:
         msg: "controller_templates"
-        
+
     - name: "Setup authentication (block)"
       block:
         - name: "Get the Authentication Token for the future requests"
