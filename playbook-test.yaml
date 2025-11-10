@@ -10,7 +10,7 @@
         # La URL de clonación debe usar el nuevo PAT
         repo: "{{awx_webhook_payload.repository.clone_url| replace('https://','https://{{ git_token }}@')}}"
         dest: "{{ local_path }}"
-        version: "{{ repo_base_branch }}"
+        version: "{{ awx_webhook_payload.ref }}"
         clone: yes
         update: yes
 
