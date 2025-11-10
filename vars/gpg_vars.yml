@@ -1,0 +1,20 @@
+# vars/gpg_vars.yml
+gpg_key_config: |
+  Key-Type: RSA
+  Key-Length: 4096
+  Subkey-Type: RSA
+  Subkey-Length: 4096
+  Name-Real: Ansible Signer Key
+  Name-Comment: Key for signing Ansible projects
+  Name-Email: signer@example.com
+  Expire-Date: 0
+  Passphrase: **{{ gpg_passphrase }}**
+  %pubring pubring.kbx
+  %secring secring.gpg
+  %commit
+  # Este archivo contiene la información de configuración (el "valor") para la generación.
+
+gpg_passphrase: "MiSuperPassphraseSecreta123" # Usa una contraseña fuerte o Vault
+
+gpg_key_email: "signer@example.com"
+gpg_home_dir: "~/.ansible-sign-gpg"
