@@ -9,9 +9,10 @@
     aap_password: "{{ vault_controller_password | default(lookup('env', 'CONTROLLER_PASSWORD')) }}"
     aap_hostname: "{{ vault_controller_hostname | default(lookup('env', 'CONTROLLER_HOST')) }}"
     aap_validate_certs: "{{ vault_controller_validate_certs | default(lookup('env', 'CONTROLLER_VERIFY_SSL')) }}"
-    controller_schedules: "{{ controller_schedules_vars | to_yaml | controller_schedules | default ([])}}"
-    controller_projects: "{{ controller_projects_vars | to_yaml | controller_projects | default ([])}}"
-    controller_templates: "{{ controller_templates_vars | to_yaml | controller_templates | default ([])}}"
+
+    controller_schedules: "{{controller_schedules_vars.controller_schedules}}"
+    controller_projects: "{{controller_projects_vars.controller_projects}}"
+    controller_templates: "{{controller_templates_vars.controller_templates}}"
   pre_tasks:
     - name: "Setup authentication (block)"
       block:
