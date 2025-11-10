@@ -13,8 +13,6 @@
         version: "{{ repo_base_branch }}"
         clone: yes
         update: yes
-      when: repo_final_url is defined
-
 
     - name: YamlLint
       ansible.builtin.shell: yamllint . --no-warnings
