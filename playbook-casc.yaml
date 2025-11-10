@@ -2,10 +2,6 @@
 - hosts: all
   connection: local
   gather_facts: false
-  vars_files:
-    - vars/controller_job_templates.yaml
-    - vars/controller_projects.yaml
-    - vars/controller_schedules.yaml
   vars:
     controller_configuration_projects_async_retries: 120
     controller_configuration_projects_async_delay: 2
@@ -13,7 +9,9 @@
     aap_password: "{{ vault_controller_password | default(lookup('env', 'CONTROLLER_PASSWORD')) }}"
     aap_hostname: "{{ vault_controller_hostname | default(lookup('env', 'CONTROLLER_HOST')) }}"
     aap_validate_certs: "{{ vault_controller_validate_certs | default(lookup('env', 'CONTROLLER_VERIFY_SSL')) }}"
-
+    controller_schedules: "{{ controller_schedules_vars | to_yaml | controller_schedules | default ([])}}"
+    controller_projects: "{{ controller_projects_vars | to_yaml | controller_projects | default ([])}}"
+    controller_templates: "{{ controller_templates_vars | to_yaml | controller_templates | default ([])}}"
   pre_tasks:
     - name: "Setup authentication (block)"
       block:
