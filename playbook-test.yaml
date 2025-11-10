@@ -2,7 +2,7 @@
 - hosts: localhost
   gather_facts: false
   vars:
-    local_path: "/tmp/{{ repo_nuevo }}_clone"
+    local_path: "/tmp/repository_clone"
   tasks:
 
     - name: 3.4 Clonar el repositorio a testear
