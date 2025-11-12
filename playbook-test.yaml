@@ -48,8 +48,8 @@
         msg: 
           - "{{ 'Fallo en el YamlLint, por favor reviselo' if yamllint_result.failed }}"
           - "{{ 'Fallo en el AnsibleLint, por favor reviselo' if ansiblelint_result.failed }}"
-          - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_result.failed }}" 
-      when: yamllint_result.failed or yamllint_result.failed or (molecule_result is defined and molecule_result.failed)
+          - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_result is defined and molecule_result.failed }}" 
+      when: yamllint_result.failed or ansiblelint_result.failed or (molecule_result is defined and molecule_result.failed)
 
     - name: Ejecucion correcta
       ansible.builtin.debug:
