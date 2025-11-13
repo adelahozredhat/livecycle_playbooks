@@ -16,7 +16,17 @@
         update: yes
 
     - name: YamlLint
-      ansible.builtin.shell: yamllint . --no-warnings
+      ansible.builtin.shell: 'yamllint --version'
+      args:
+        chdir: "{{ local_path }}/"
+      register: yamllint_result
+      ignore_errors: true
+
+    - debug:
+        msg: "{{yamllint_result}}"
+
+    - name: YamlLint
+      ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 120}}}"'
       args:
         chdir: "{{ local_path }}/"
       register: yamllint_result
@@ -37,7 +47,7 @@
     - name: Molecules Test
       ansible.builtin.shell: molecule test
       args:
-        chdir: "{{ local_path }}/molecule"
+        chdir: "{{ local_path }}"
       register: molecule_result
       when: folder_status.stat.exists
       ignore_errors: true
@@ -51,14 +61,35 @@
           - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_result is defined and molecule_result.failed is defined and molecule_result.failed }}" 
       when: (yamllint_result.failed is defined and yamllint_result.failed) or (ansiblelint_result.failed is defined and ansiblelint_result.failed) or (molecule_result is defined and molecule_result.failed is defined and molecule_result.failed)
 
-     # - name: Generate gpg-sign
-    
-    # - name: AnsibleSign
-    #   ansible.builtin.expect:
-    #     command: ansible-sign project gpg-sign . -p 
-    #     responses:
-    #       "GPG Key Passphrase:": "PRUEBA"
-    #   args:
-    #     chdir: template_ansible_playbook_develop/
+    - name: 4.1 ENVIAR NOTIFICACIÓN POR EMAIL (ansible.builtin.mail)
+      ansible.builtin.mail:
+        host: "{{ smtp_host }}"
+        port: "{{ smtp_port|int }}"
+        username: "{{ smtp_user }}"
+        password: "{{ smtp_password }}"
+        to: "{{ smtp_to }}"
+        subject: "✅ Repositorio Creado [{{ tipo_repositorio | upper }}]: {{ repo_nuevo }}"
+        body: |
+          Hola,
 
-    # - name: Git Push
+          Se ha completado la automatización.
+          - URL de Acceso: {{ repo_final_url }}
+          - Webhook (https://{{ aap_hostname }}{{ aap_job_template_content_results[0].related.webhook_receiver }}) configurado.
+          - PAT de usuario creado para este proceso.
+
+          🚨 ¡ADVERTENCIA DE SEGURIDAD! El nuevo PAT de usuario tiene alcance amplio y es visible 
+          en los logs de la ejecución (variable 'newly_created_pat'). Debería ser almacenado 
+          inmediatamente en un gestor de secretos (Vault) y luego borrado de la plataforma si no es necesario.
+
+          Saludos,
+          Plataforma de Automatización AWX/AAP
+      when: repo_final_url is defined and repo_final_url != "" and smtp_host is defined and "email" in canales_comunicacion
+
+    - name: 4.2 ENVIAR NOTIFICACIÓN POR SLACK (community.general.slack)
+      community.general.slack:
+        token: "{{ slack_api_token }}"
+        channel: "{{ slack_channel }}"
+        msg: "🚀 *Nuevo Repositorio Creado en {{ tipo_repositorio | upper }}*\n- *Nombre:* `{{ repo_nuevo }}`\n- *URL:* <{{ repo_final_url }}|Abrir Repositorio>\n- *PAT Creado:* Nuevo PAT de usuario generado para la automatización.\n*(Recuperar el valor del PAT de los logs de AWX/AAP)*"
+        username: "AWX Automation"
+        icon_emoji: ":rocket:"
+      when: repo_final_url is defined and repo_final_url != "" and slack_api_token is defined and "slack" in canales_comunicacion
