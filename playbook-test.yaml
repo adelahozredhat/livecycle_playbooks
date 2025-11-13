@@ -16,16 +16,6 @@
         update: yes
 
     - name: YamlLint
-      ansible.builtin.shell: 'yamllint --version'
-      args:
-        chdir: "{{ local_path }}/"
-      register: yamllint_result
-      ignore_errors: true
-
-    - debug:
-        msg: "{{yamllint_result}}"
-
-    - name: YamlLint
       ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 120}}}"'
       args:
         chdir: "{{ local_path }}/"
