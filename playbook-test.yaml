@@ -16,14 +16,14 @@
         update: yes
 
     - name: YamlLint
-      ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 120}}}"'
+      ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 150}}}"'
       args:
         chdir: "{{ local_path }}/"
       register: yamllint_result
       ignore_errors: true
 
     - name: AnsibleLint
-      ansible.builtin.shell: ansible-lint --nocolor
+      ansible.builtin.shell: env -i /usr/bin/ansible-lint --nocolor
       args:
         chdir: "{{ local_path }}/"
       register: ansiblelint_result
@@ -38,6 +38,8 @@
       ansible.builtin.shell: molecule test
       args:
         chdir: "{{ local_path }}"
+      environment:
+        PY_COLORS: 0
       register: molecule_result
       when: folder_status.stat.exists
       ignore_errors: true

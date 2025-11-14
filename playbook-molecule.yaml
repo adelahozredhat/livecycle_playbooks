@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    local_path: "/tmp/repository_clone"
+
+  tasks:
+
+    - name: Get stats for the folder
+      ansible.builtin.stat:
+        path: "{{ local_path }}/molecule" # Replace with the actual path
+      register: folder_status
+
+    - name: Molecules Test
+      ansible.builtin.shell: molecule test
+      args:
+        chdir: "{{ local_path }}"
+      environment:
+        PY_COLORS: 0
+      register: molecule_result
+      when: folder_status.stat.exists
+      ignore_errors: true
+
+    - name: Resultado ejecucion Molecule
+      msg: "{{molecule_result}}"
+
+    - name: Send Vars OutPut
+      ansible.builtin.set_stats:
+        data: 
+          yamllint_execution: "{{molecule_result}}"

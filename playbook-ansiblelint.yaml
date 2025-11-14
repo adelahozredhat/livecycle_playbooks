@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    local_path: "/tmp/repository_clone"
+
+  tasks:
+
+    - name: AnsibleLint
+      ansible.builtin.shell: env -i /usr/bin/ansible-lint --nocolor
+      args:
+        chdir: "{{ local_path }}/"
+      register: ansiblelint_result
+      ignore_errors: true
+
+    - name: Resultado ejecucion AnsibleLint
+      msg: "{{ansiblelint_result}}"
+
+    - name: Send Vars OutPut
+      ansible.builtin.set_stats:
+        data: 
+          ansiblelint_execution: "{{ansiblelint_result}}"

@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    local_path: "/tmp/repository_clone"
+
+  tasks:
+
+    - name: YamlLint
+      ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 150}}}"'
+      args:
+        chdir: "{{ local_path }}/"
+      register: yamllint_result
+      ignore_errors: true
+
+    - name: Resultado ejecucion YamlLint
+      msg: "{{yamllint_result}}"
+
+    - name: Send Vars OutPut
+      ansible.builtin.set_stats:
+        data: 
+          yamllint_execution: "{{yamllint_result}}"
