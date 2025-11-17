@@ -1,0 +1,6 @@
+
+- "{{ 'Fallo en el Clonado, por favor reviselo' if clone_execution.failed is defined and clone_execution.failed }}"
+- "{{ 'Fallo en el YamlLint, por favor reviselo' if yamllint_execution.failed is defined and yamllint_execution.failed }}"
+- "{{ 'Fallo en el AnsibleLint, por favor reviselo' if ansiblelint_execution.failed is defined and ansiblelint_execution.failed }}"
+- "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed }}" 
+- "{{ 'Fallo en el proceso de firmado del proyecto' if sign_execution_failed is defined and sign_execution_failed }}"

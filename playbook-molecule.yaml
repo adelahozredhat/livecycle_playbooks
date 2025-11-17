@@ -32,4 +32,4 @@
     - name: Send Vars OutPut
       ansible.builtin.set_stats:
         data: 
-          yamllint_execution: "{{molecule_result}}"
+          molecule_execution: "{{molecule_result}}"

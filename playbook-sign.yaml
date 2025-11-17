@@ -9,54 +9,64 @@
     local_path: "/tmp/repository_clone"
 
   tasks:
+    - block:
+      - name: Clone repository
+        ansible.builtin.import_role:
+          name: clone_repository
 
-    - name: Clone repository
-      ansible.builtin.import_role:
-        name: clone_repository
+      - name: 📁 Asegurar que el directorio GPG_HOME exista
+        ansible.builtin.file:
+          path: "{{ gpg_home_dir }}"
+          state: directory
+          mode: '0700'
 
-    - name: 📁 Asegurar que el directorio GPG_HOME exista
-      ansible.builtin.file:
-        path: "{{ gpg_home_dir }}"
-        state: directory
-        mode: '0700'
+      - name: 📝 Crear archivo de configuración GPG batch
+        ansible.builtin.copy:
+          content: "{{ gpg_key_config }}"
+          dest: /tmp/gpg_batch_config
+          mode: '0600'
 
-    - name: 📝 Crear archivo de configuración GPG batch
-      ansible.builtin.copy:
-        content: "{{ gpg_key_config }}"
-        dest: /tmp/gpg_batch_config
-        mode: '0600'
+      - name: ✨ Generar la clave GPG de forma no interactiva
+        ansible.builtin.command:
+          cmd: "gpg --batch --full-generate-key /tmp/gpg_batch_config"
+          creates: "{{ gpg_home_dir }}/pubring.kbx" # Evita que se ejecute si ya existe
+        environment:
+          # Define el directorio GPG_HOME para aislar la clave
+          GNUPGHOME: "{{ gpg_home_dir }}"
 
-    - name: ✨ Generar la clave GPG de forma no interactiva
-      ansible.builtin.command:
-        cmd: "gpg --batch --full-generate-key /tmp/gpg_batch_config"
-        creates: "{{ gpg_home_dir }}/pubring.kbx" # Evita que se ejecute si ya existe
-      environment:
-        # Define el directorio GPG_HOME para aislar la clave
-        GNUPGHOME: "{{ gpg_home_dir }}"
+      - name: 🔎 Obtener el Fingerprint de la clave
+        ansible.builtin.shell:
+          cmd: "gpg --list-secret-keys --with-colons --with-fingerprint {{ gpg_key_email }} | awk -F: '/fpr:/ {print $10}' | head -n 1"
+        environment:
+          GNUPGHOME: "{{ gpg_home_dir }}"
+        register: gpg_fingerprint
 
-    - name: 🔎 Obtener el Fingerprint de la clave
-      ansible.builtin.shell:
-        cmd: "gpg --list-secret-keys --with-colons --with-fingerprint {{ gpg_key_email }} | awk -F: '/fpr:/ {print $10}' | head -n 1"
-      environment:
-        GNUPGHOME: "{{ gpg_home_dir }}"
-      register: gpg_fingerprint
+      - name: 💬 Mostrar Fingerprint de la clave (para verificación)
+        ansible.builtin.debug:
+          msg: "Fingerprint de la clave GPG: {{ gpg_fingerprint.stdout }}"
 
-    - name: 💬 Mostrar Fingerprint de la clave (para verificación)
-      ansible.builtin.debug:
-        msg: "Fingerprint de la clave GPG: {{ gpg_fingerprint.stdout }}"
+      # --- Sección de Uso con ansible-sign ---
 
-    # --- Sección de Uso con ansible-sign ---
+      - name: ✍️ Firmar el archivo de prueba con ansible-sign
+        ansible.builtin.command:
+          # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
+          cmd: "ansible-sign project gpg-sign --gnupg-home {{ gpg_home_dir }} --fingerprint {{ gpg_fingerprint.stdout }} {{ local_path }}"
+        register: sign_result
 
-    - name: ✍️ Firmar el archivo de prueba con ansible-sign
-      ansible.builtin.command:
-        # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
-        cmd: "ansible-sign sign --gnupg-home {{ gpg_home_dir }} --fingerprint {{ gpg_fingerprint.stdout }} --passphrase '{{ gpg_passphrase }}' {{ local_path }}"
-      register: sign_result
+      - name: ✅ Verificar resultado de la firma
+        cmd: "ansible-sign project gpg-verify --gnupg-home {{ gpg_home_dir }} {{ local_path }}"
+        register: sign_verify
 
-    - name: ✅ Verificar resultado de la firma
-      ansible.builtin.debug:
-        msg: "Resultado de ansible-sign: {{ sign_result.stdout }}"
+      - name: ✅ Verificar resultado de la firma
+        ansible.builtin.debug:
+          msg: "Resultado de ansible-sign: {{ sign_result.stdout }}"
 
-    - name: Push repository
-      ansible.builtin.import_role:
-        name: push_repository
+      - name: Push repository
+        ansible.builtin.import_role:
+          name: push_repository
+    rescue:
+
+      - name: Send Vars OutPut
+        ansible.builtin.set_stats:
+          data: 
+            sign_execution_failed: true

@@ -9,3 +9,19 @@
     - name: Clone repository
       ansible.builtin.import_role:
         name: clone_repository
+      register: clone_result
+      ignore_errors: true
+
+    - name: Resultado ejecucion Molecule
+      debug:
+        msg: "{{clone_result}}"
+
+    - name: Send Vars OutPut
+      ansible.builtin.set_stats:
+        data: 
+          clone_execution: "{{clone_result}}"
+
+    - name: Repository error
+      ansible.builtin.fail:
+        msg: "Repository error clone: {{clone_result.result.stdout}}"
+      when: clone_result.failed

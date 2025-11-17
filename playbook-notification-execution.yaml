@@ -5,43 +5,15 @@
     local_path: "/tmp/repository_clone"
 
   tasks:
-    - name: Errors checks
+    - name: 
+
+
+    - name: Errors Checks
       ansible.builtin.fail:
         msg: 
-          - "{{ 'Fallo en el YamlLint, por favor reviselo' if yamllint_result.failed is defined and yamllint_result.failed }}"
-          - "{{ 'Fallo en el AnsibleLint, por favor reviselo' if ansiblelint_result.failed is defined and ansiblelint_result.failed }}"
-          - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_result is defined and molecule_result.failed is defined and molecule_result.failed }}" 
-      when: (yamllint_result.failed is defined and yamllint_result.failed) or (ansiblelint_result.failed is defined and ansiblelint_result.failed) or (molecule_result is defined and molecule_result.failed is defined and molecule_result.failed)
-
-    - name: 4.1 ENVIAR NOTIFICACIÓN POR EMAIL (ansible.builtin.mail)
-      ansible.builtin.mail:
-        host: "{{ smtp_host }}"
-        port: "{{ smtp_port|int }}"
-        username: "{{ smtp_user }}"
-        password: "{{ smtp_password }}"
-        to: "{{ smtp_to }}"
-        subject: "✅ Repositorio Creado [{{ tipo_repositorio | upper }}]: {{ repo_nuevo }}"
-        body: |
-          Hola,
-
-          Se ha completado la automatización.
-          - URL de Acceso: {{ repo_final_url }}
-          - Webhook (https://{{ aap_hostname }}{{ aap_job_template_content_results[0].related.webhook_receiver }}) configurado.
-          - PAT de usuario creado para este proceso.
-
-          🚨 ¡ADVERTENCIA DE SEGURIDAD! El nuevo PAT de usuario tiene alcance amplio y es visible 
-          en los logs de la ejecución (variable 'newly_created_pat'). Debería ser almacenado 
-          inmediatamente en un gestor de secretos (Vault) y luego borrado de la plataforma si no es necesario.
-
-          Saludos,
-          Plataforma de Automatización AWX/AAP
-      when: repo_final_url is defined and repo_final_url != "" and smtp_host is defined and "email" in canales_comunicacion
-
-    - name: 4.2 ENVIAR NOTIFICACIÓN POR SLACK (community.general.slack)
-      community.general.slack:
-        token: "{{ slack_api_token }}"
-        channel: "{{ slack_channel }}"
-        msg: "🚀 *Nuevo Repositorio Creado en {{ tipo_repositorio | upper }}*\n- *Nombre:* `{{ repo_nuevo }}`\n- *URL:* <{{ repo_final_url }}|Abrir Repositorio>\n- *PAT Creado:* Nuevo PAT de usuario generado para la automatización.\n*(Recuperar el valor del PAT de los logs de AWX/AAP)*"
-        username: "AWX Automation"
-        icon_emoji: ":rocket:"
-      when: repo_final_url is defined and repo_final_url != "" and slack_api_token is defined and "slack" in canales_comunicacion
+          - "{{ 'Fallo en el Clonado, por favor reviselo' if clone_execution.failed is defined and clone_execution.failed }}"
+          - "{{ 'Fallo en el YamlLint, por favor reviselo' if yamllint_execution.failed is defined and yamllint_execution.failed }}"
+          - "{{ 'Fallo en el AnsibleLint, por favor reviselo' if ansiblelint_execution.failed is defined and ansiblelint_execution.failed }}"
+          - "{{ 'Fallo en el Molecules Test, por favor reviselo' if molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed }}" 
+          - "{{ 'Fallo en el proceso de firmado del proyecto' if sign_execution_failed is defined and sign_execution_failed }}"
+      when: (clone_execution.failed is defined and clone_execution.failed) or (yamllint_execution.failed is defined and yamllint_execution.failed) or (ansiblelint_execution.failed is defined and ansiblelint_execution.failed) or (molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed) or (sign_execution_failed is defined and sign_execution_failed) 
