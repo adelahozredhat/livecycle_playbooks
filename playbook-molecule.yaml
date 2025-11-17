@@ -6,6 +6,15 @@
 
   tasks:
 
+    - name: 3.4 Clonar el repositorio a testear
+      ansible.builtin.git:
+        # La URL de clonación debe usar el nuevo PAT
+        repo: "{{awx_webhook_payload.repository.clone_url| replace('https://','https://'+git_token+'@')}}"
+        dest: "{{ local_path }}"
+        version: "{{ awx_webhook_payload.ref }}"
+        clone: yes
+        update: yes
+
     - name: Get stats for the folder
       ansible.builtin.stat:
         path: "{{ local_path }}/molecule" # Replace with the actual path

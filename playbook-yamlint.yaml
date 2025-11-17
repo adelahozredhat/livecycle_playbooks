@@ -6,6 +6,15 @@
 
   tasks:
 
+    - name: 3.4 Clonar el repositorio a testear
+      ansible.builtin.git:
+        # La URL de clonación debe usar el nuevo PAT
+        repo: "{{awx_webhook_payload.repository.clone_url| replace('https://','https://'+git_token+'@')}}"
+        dest: "{{ local_path }}"
+        version: "{{ awx_webhook_payload.ref }}"
+        clone: yes
+        update: yes
+
     - name: YamlLint
       ansible.builtin.shell: 'yamllint . --no-warnings -d "{extends: default, rules: {line-length: {max: 150}}}"'
       args:
@@ -15,7 +24,7 @@
 
     - name: Resultado ejecucion YamlLint
       debug:
-        msg: "{{molecule_result}}"
+        msg: "{{yamllint_result}}"
 
     - name: Send Vars OutPut
       ansible.builtin.set_stats:

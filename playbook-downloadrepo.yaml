@@ -6,7 +6,7 @@
 
   tasks:
 
-    - name: 3.4 Clonar el repositorio a testear
+    - name: 3.4 Check clone repo
       ansible.builtin.git:
         # La URL de clonación debe usar el nuevo PAT
         repo: "{{awx_webhook_payload.repository.clone_url| replace('https://','https://'+git_token+'@')}}"
