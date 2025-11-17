@@ -5,18 +5,14 @@
   gather_facts: no
   vars_files:
     - vars/gpg_vars.yml
+  vars:
+    local_path: "/tmp/repository_clone"
 
   tasks:
-    
-    - name: 3.4 Clonar el repositorio base localmente
-      ansible.builtin.git:
-        # La URL de clonación debe usar el nuevo PAT
-        repo: "https://{{ newly_created_pat }}@{{ git_host }}/{{ grupo }}/{{ repo_base }}.git"
-        dest: "{{ local_path }}"
-        version: "{{ repo_base_branch }}"
-        clone: yes
-        update: yes
-      when: repo_final_url is defined
+
+    - name: Clone repository
+      ansible.builtin.import_role:
+        name: clone_repository
 
     - name: 📁 Asegurar que el directorio GPG_HOME exista
       ansible.builtin.file:
@@ -51,32 +47,16 @@
 
     # --- Sección de Uso con ansible-sign ---
 
-    - name: 📝 Crear archivo de prueba para firmar
-      ansible.builtin.copy:
-        content: |
-          Este es un archivo de prueba para firmar.
-          Hora: {{ ansible_date_time.iso8601_micro }}
-        dest: /tmp/test_file_to_sign.txt
-        # Usamos el módulo copy para asegurar que el archivo exista en el host de control.
-
     - name: ✍️ Firmar el archivo de prueba con ansible-sign
       ansible.builtin.command:
         # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
-        cmd: "ansible-sign sign --gnupg-home {{ gpg_home_dir }} --fingerprint {{ gpg_fingerprint.stdout }} --passphrase '{{ gpg_passphrase }}' /tmp/test_file_to_sign.txt"
+        cmd: "ansible-sign sign --gnupg-home {{ gpg_home_dir }} --fingerprint {{ gpg_fingerprint.stdout }} --passphrase '{{ gpg_passphrase }}' {{ local_path }}"
       register: sign_result
 
     - name: ✅ Verificar resultado de la firma
       ansible.builtin.debug:
         msg: "Resultado de ansible-sign: {{ sign_result.stdout }}"
 
-    - name: 3.6 Inicializar nuevo repositorio Git, agregar contenido y commit
-      ansible.builtin.command: "{{ item }}"
-      args:
-        chdir: "{{ local_path }}"
-      loop:
-        - git add .
-        - git config --global user.email "{{git_user}}@example.com"
-        - git config --global user.name "{{git_user}}"
-        - git config http.sslVerify false
-        - git commit -m 'Sign playbook'
-        - git push
+    - name: Push repository
+      ansible.builtin.import_role:
+        name: push_repository

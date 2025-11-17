@@ -1,0 +1,12 @@
+---
+- name: 3.6 Inicializar nuevo repositorio Git, agregar contenido y commit
+  ansible.builtin.command: "{{ item }}"
+  args:
+    chdir: "{{ local_path }}"
+  loop:
+    - git add .
+    - git config --global user.email "{{git_user}}@example.com"
+    - git config --global user.name "{{git_user}}"
+    - git config http.sslVerify false
+    - git commit -m 'Sign playbook'
+    - git push
