@@ -22,7 +22,8 @@
       ignore_errors: true
 
     - name: Resultado ejecucion Molecule
-      msg: "{{molecule_result}}"
+      debug:
+        msg: "{{molecule_result}}"
 
     - name: Send Vars OutPut
       ansible.builtin.set_stats:
