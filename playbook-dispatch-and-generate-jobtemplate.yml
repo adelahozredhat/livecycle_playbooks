@@ -19,7 +19,6 @@
     controller_projects: "{{controller_projects_aux.controller_projects| default([])}}"
     controller_templates_aux: "{{controller_templates_vars| from_yaml}}"
     controller_templates: "{{controller_templates_aux.controller_templates| default([])}}"
-
   pre_tasks:
     - name: "Setup authentication (block)"
       block:
@@ -49,6 +48,86 @@
             data: 
               casc_execution_failed: true
 
+        - name: Init info controller_projects
+          ansible.builtin.set_stats:
+            data: 
+              controller_info_projects: []
+
+        - name: Iterar sobre Proyectos y Buscar ID en AWX
+          ansible.builtin.uri:
+            url: "{{ aap_hostname }}/api/v2/projects/"
+            method: GET
+            user: "{{ aap_username }}"
+            password: "{{ aap_password }}"
+            validate_certs: no
+            status_code: 200
+            # Filtramos por el nombre del proyecto actual
+            # AWX usa el filtro 'name__iexact' o 'name'
+            # Esto requiere que tu AWX esté accesible y configurado.
+            body_format: json
+            query:
+              name: "{{ item.name }}"
+          register: project_search_result
+          loop: "{{ controller_projects }}"
+          # Importante: Usamos `loop_control` para mantener la información del proyecto original
+          loop_control:
+            loop_var: controller_projects
+
+        - name: Construir la Nueva Lista con Nombre y URL
+          ansible.builtin.set_fact:
+            controller_info_projects: "{{ controller_info_projects + [new_item] }}"
+          vars:
+            # Obtenemos el ID del primer resultado de la búsqueda
+            # Asume que el proyecto existe y que la búsqueda devuelve al menos un resultado.
+            project_id: "{{ item.json.results[0].id | default(None) }}"
+            # Creamos el nuevo elemento a añadir a la lista
+            new_item:
+              name: "{{ item.json.results[0].name }}"
+              # Generamos la URL usando el ID encontrado
+              access_url: "{{ awx_host }}/#/projects/{{ project_id }}"
+          loop: "{{ project_search_result.results }}"
+
+        - name: Init info controller_templates
+          ansible.builtin.set_stats:
+            data: 
+              controller_info_templates: []
+
+        - name: Iterar sobre Proyectos y Buscar ID en AWX
+          ansible.builtin.uri:
+            url: "{{ aap_hostname }}/api/v2/job_templates/"
+            method: GET
+            user: "{{ aap_username }}"
+            password: "{{ aap_password }}"
+            validate_certs: no
+            status_code: 200
+            # Filtramos por el nombre del proyecto actual
+            # AWX usa el filtro 'name__iexact' o 'name'
+            # Esto requiere que tu AWX esté accesible y configurado.
+            body_format: json
+            query:
+              name: "{{ item.name }}"
+          register: jobteamplate_search_result
+          loop: "{{ controller_templates }}"
+          # Importante: Usamos `loop_control` para mantener la información del proyecto original
+          loop_control:
+            loop_var: controller_templates
+
+        - name: Construir la Nueva Lista con Nombre y URL
+          ansible.builtin.set_fact:
+            controller_info_templates: "{{ controller_info_templates + [new_item] }}"
+          vars:
+            # Obtenemos el ID del primer resultado de la búsqueda
+            # Asume que el proyecto existe y que la búsqueda devuelve al menos un resultado.
+            job_teamplate_id: "{{ item.json.results[0].id | default(None) }}"
+            # Creamos el nuevo elemento a añadir a la lista
+            new_item:
+              name: "{{ item.json.results[0].name }}"
+              # Generamos la URL usando el ID encontrado
+              access_url: "{{ awx_host }}/#/job_templates/{{ job_teamplate_id }}"
+              launch_url: "{{ awx_host }}/#/job_templates/{{ job_teamplate_id }}/launch/"
+          loop: "{{ jobteamplate_search_result.results }}"
+          # El `loop` aquí debe coincidir con el número de resultados de la tarea anterior
+
   tasks:
     - name: Bloque principal para ejecutar roles protegidos
       block:
@@ -61,6 +140,11 @@
         - name: Ejecutar Rol de Dispatch
           ansible.builtin.include_role:
             name: infra.controller_configuration.dispatch
+        
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              casc_execution_failed: false
             
         # ==========================================================
 
@@ -70,6 +154,7 @@
           ansible.builtin.set_stats:
             data: 
               casc_execution_failed: true
+
 
   post_tasks:
     - name: "Delete the Authentication Token used"
