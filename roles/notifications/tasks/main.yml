@@ -1,4 +1,9 @@
 ---
+- name: Set var subject
+  set_facts:
+    subject: "{{ '✅ Ejecución correcta' if notification_type_error else '❌ Ejecución fallida' }}"
+
+
 - name: Enviar notificación ejecuccion fallida CI mail
   ansible.builtin.mail:
     host: "{{ smtp_host }}"
@@ -6,7 +11,7 @@
     username: "{{ smtp_user }}"
     password: "{{ smtp_password }}"
     to: "{{ smtp_to }}"
-    subject: "✅ Ejecución correcta"
+    subject: "{{subject}}"
     body: |
       Hola,
 
@@ -15,7 +20,6 @@
 
       Saludos,
       Plataforma de Automatización AWX/AAP
-  when: repo_final_url is defined and repo_final_url != "" and smtp_host is defined and "email" in canales_comunicacion
 
 - name: Enviar notificación ejecuccion fallida CI slack
   community.general.slack:
@@ -31,4 +35,3 @@
       Plataforma de Automatización AWX/AAP"
     username: "AWX Automation"
     icon_emoji: ":rocket:"
-  when: repo_final_url is defined and repo_final_url != "" and slack_api_token is defined and "slack" in canales_comunicacion

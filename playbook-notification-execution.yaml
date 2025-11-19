@@ -9,6 +9,8 @@
     - name: Send notifications
       ansible.builtin.import_role:
         name: notifications
+      vars: 
+        notification_type_error: "{{clone_execution.failed is defined and clone_execution.failed) or (yamllint_execution.failed is defined and yamllint_execution.failed) or (ansiblelint_execution.failed is defined and ansiblelint_execution.failed) or (molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed) or (sign_execution_failed is defined and sign_execution_failed}}"
 
     - name: Errors Checks
       ansible.builtin.fail:
