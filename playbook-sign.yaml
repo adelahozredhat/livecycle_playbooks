@@ -64,9 +64,9 @@
       - name: Push repository
         ansible.builtin.import_role:
           name: push_repository
-    rescue:
+      rescue:
 
-      - name: Send Vars OutPut
-        ansible.builtin.set_stats:
-          data: 
-            sign_execution_failed: true
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              sign_execution_failed: true
