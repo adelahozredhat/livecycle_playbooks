@@ -10,7 +10,7 @@
       ansible.builtin.import_role:
         name: notifications
       vars: 
-        notification_type_error_ci: "{{clone_execution.failed is defined and clone_execution.failed) or (yamllint_execution.failed is defined and yamllint_execution.failed) or (ansiblelint_execution.failed is defined and ansiblelint_execution.failed) or (molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed) or (sign_execution_failed is defined and sign_execution_failed}}"
+        notification_type_error_ci: "{{(clone_execution.failed is defined and clone_execution.failed) or (yamllint_execution.failed is defined and yamllint_execution.failed) or (ansiblelint_execution.failed is defined and ansiblelint_execution.failed) or (molecule_execution is defined and molecule_execution.failed is defined and molecule_execution.failed) or (sign_execution_failed is defined and sign_execution_failed)}}"
         notification_type_error_sign_casc: "{{(sign_execution_failed is defined and sign_execution_failed) or (casc_execution_failed is defined and casc_execution_failed)}}"
         notification_promotion: awx_webhook_payload.head_commit.message | startswith("[PROMOTE-TO-AWX]")
 

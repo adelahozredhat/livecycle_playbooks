@@ -5,6 +5,7 @@
     set_fact:
       subject: "{{ '❌ Ejecución fallida CI' if notification_type_error_ci else '✅ Ejecución correcta CI' }}"
       icon_emoji: "{{ ':x:' if notification_type_error_ci else ':rocket:' }}"
+      url_workflow_execution: "{{ awx_protocol }}://{{ awx_host }}/#/jobs/workflow/{{ awx_workflow_job_id }}/output"
 
 
   - name: Enviar notificación ejecuccion fallida CI mail
@@ -18,8 +19,12 @@
       body: |
         Hola,
 
-        {{ lookup('template', 'template-message-email-ok.j2') }}
-        {{ lookup('template', 'template-message-email-error.j2') }}
+        {{ lookup('template', 'template-message-email-ok-ci.j2') }}
+        {{ lookup('template', 'template-message-email-error-ci.j2') }}
+
+        Ejecucion WorkFlow:
+
+        {{ url_workflow_execution }}
 
         Saludos,
         Plataforma de Automatización AWX/AAP
@@ -31,21 +36,25 @@
       msg: "|
         Hola,
 
-        {{ lookup('template', 'template-message-slack-ok.j2') }}
-        {{ lookup('template', 'template-message-slack-error.j2') }}
+        {{ lookup('template', 'template-message-slack-ok-ci.j2') }}
+        {{ lookup('template', 'template-message-slack-error-ci.j2') }}
+
+        Ejecucion WorkFlow:
+
+        {{ url_workflow_execution }}
 
         Saludos,
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"
       icon_emoji: "{{icon_emoji}}"
-    when: type_notification is defined and type_notification == "ci"
+  when: type_notification is defined and type_notification == "ci"
 
 - name: Notification Sign/CasC execution
   block:
   - name: Set var subject
     set_fact:
-      subject: "{{ '✅ Ejecución correcta' if notification_type_error else '❌ Ejecución fallida' }}"
-      icon_emoji: "{{ ':rocket:'  if notification_type_error else  ':x:' }}"
+      subject: "{{ '✅ Ejecución correcta' if notification_type_error_sign_casc else '❌ Ejecución fallida' }}"
+      icon_emoji: "{{ ':rocket:'  if notification_type_error_sign_casc else  ':x:' }}"
 
 
   - name: Enviar notificación ejecuccion fallida Sign/CasC mail
@@ -59,8 +68,12 @@
       body: |
         Hola,
 
-        {{ lookup('template', 'template-message-email-ok.j2') }}
-        {{ lookup('template', 'template-message-email-error.j2') }}
+        {{ lookup('template', 'template-message-email-ok-sign-casc.j2') }}
+        {{ lookup('template', 'template-message-email-error-sign-casc.j2') }}
+
+        Ejecucion WorkFlow:
+
+        {{ url_workflow_execution }}
 
         Saludos,
         Plataforma de Automatización AWX/AAP
@@ -72,11 +85,15 @@
       msg: "|
         Hola,
 
-        {{ lookup('template', 'template-message-slack-ok.j2') }}
-        {{ lookup('template', 'template-message-slack-error.j2') }}
+        {{ lookup('template', 'template-message-slack-ok-sign-casc.j2') }}
+        {{ lookup('template', 'template-message-slack-error-sign-casc.j2') }}
+
+        Ejecucion WorkFlow:
+
+        {{ url_workflow_execution }}
 
         Saludos,
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"
       icon_emoji: "{{icon_emoji}}"
-    when: type_notification is defined and type_notification == "sign_casc"
+  when: type_notification is defined and type_notification == "sign_casc"

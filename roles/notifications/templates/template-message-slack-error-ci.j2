@@ -1,0 +1,33 @@
+{% if clone_execution is defined and clone_execution.failed %}
+❌Fallo en el Clonado, por favor reviselo
+{% endif %}
+
+{% if yamllint_execution is defined and yamllint_execution.failed %}
+❌Fallo en el YamlLint, por favor reviselo
+
+{{yamllint_execution.stdout_lines}}
+
+{{yamllint_execution.stderr_lines}}
+{% endif %}
+
+{% if ansiblelint_execution is defined and ansiblelint_execution.failed %}
+❌Fallo en el AnsibleLint, por favor reviselo
+
+{{ansiblelint_execution.stdout_lines}}
+
+{{ansiblelint_execution.stderr_lines}}
+
+{% endif %}
+
+{% if molecule_execution is defined and molecule_execution.failed %}
+❌Fallo en el Molecules Test, por favor reviselo
+
+{{molecule_execution.stdout_lines}}
+
+{{molecule_execution.stderr_lines}}
+
+{% endif %}
+
+{% if sign_execution_failed is defined and sign_execution_failed %}
+❌Fallo en el proceso de firmado del proyecto
+{% endif %}
