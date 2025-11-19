@@ -9,8 +9,8 @@
     - name: Clone repository
       ansible.builtin.import_role:
         name: clone_repository
-      register: clone_result
-      ignore_errors: true
+      vars: 
+        ignore_errors_clone: true
 
     - name: Resultado ejecucion Molecule
       debug:

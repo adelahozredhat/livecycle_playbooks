@@ -7,3 +7,5 @@
     version: "{{ awx_webhook_payload.ref }}"
     clone: yes
     update: yes
+  register: clone_result
+  ignore_errors: "{{ignore_errors_clone|default(false)}}"

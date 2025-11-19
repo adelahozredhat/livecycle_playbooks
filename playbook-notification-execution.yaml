@@ -5,8 +5,10 @@
     local_path: "/tmp/repository_clone"
 
   tasks:
-    - name: 
-
+    
+    - name: Send notifications
+      ansible.builtin.import_role:
+        name: notifications
 
     - name: Errors Checks
       ansible.builtin.fail:
