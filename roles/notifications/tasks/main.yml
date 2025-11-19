@@ -1,37 +1,82 @@
 ---
-- name: Set var subject
-  set_facts:
-    subject: "{{ '✅ Ejecución correcta' if notification_type_error else '❌ Ejecución fallida' }}"
+- name: Notification CI execution
+  block:
+  - name: Set var subject
+    set_fact:
+      subject: "{{ '❌ Ejecución fallida CI' if notification_type_error_ci else '✅ Ejecución correcta CI' }}"
+      icon_emoji: "{{ ':x:' if notification_type_error_ci else ':rocket:' }}"
 
 
-- name: Enviar notificación ejecuccion fallida CI mail
-  ansible.builtin.mail:
-    host: "{{ smtp_host }}"
-    port: "{{ smtp_port|int }}"
-    username: "{{ smtp_user }}"
-    password: "{{ smtp_password }}"
-    to: "{{ smtp_to }}"
-    subject: "{{subject}}"
-    body: |
-      Hola,
+  - name: Enviar notificación ejecuccion fallida CI mail
+    ansible.builtin.mail:
+      host: "{{ smtp_host }}"
+      port: "{{ smtp_port|int }}"
+      username: "{{ smtp_user }}"
+      password: "{{ smtp_password }}"
+      to: "{{ smtp_to }}"
+      subject: "{{subject}}"
+      body: |
+        Hola,
 
-      {{ lookup('template', 'template-message-email-ok.j2') }}
-      {{ lookup('template', 'template-message-email-error.j2') }}
+        {{ lookup('template', 'template-message-email-ok.j2') }}
+        {{ lookup('template', 'template-message-email-error.j2') }}
 
-      Saludos,
-      Plataforma de Automatización AWX/AAP
+        Saludos,
+        Plataforma de Automatización AWX/AAP
 
-- name: Enviar notificación ejecuccion fallida CI slack
-  community.general.slack:
-    token: "{{ slack_api_token }}"
-    channel: "{{ slack_channel }}"
-    msg: "|
-      Hola,
+  - name: Enviar notificación ejecuccion fallida CI slack
+    community.general.slack:
+      token: "{{ slack_api_token }}"
+      channel: "{{ slack_channel }}"
+      msg: "|
+        Hola,
 
-      {{ lookup('template', 'template-message-slack-ok.j2') }}
-      {{ lookup('template', 'template-message-slack-error.j2') }}
+        {{ lookup('template', 'template-message-slack-ok.j2') }}
+        {{ lookup('template', 'template-message-slack-error.j2') }}
 
-      Saludos,
-      Plataforma de Automatización AWX/AAP"
-    username: "AWX Automation"
-    icon_emoji: ":rocket:"
+        Saludos,
+        Plataforma de Automatización AWX/AAP"
+      username: "AWX Automation"
+      icon_emoji: "{{icon_emoji}}"
+    when: type_notification is defined and type_notification == "ci"
+
+- name: Notification Sign/CasC execution
+  block:
+  - name: Set var subject
+    set_fact:
+      subject: "{{ '✅ Ejecución correcta' if notification_type_error else '❌ Ejecución fallida' }}"
+      icon_emoji: "{{ ':rocket:'  if notification_type_error else  ':x:' }}"
+
+
+  - name: Enviar notificación ejecuccion fallida Sign/CasC mail
+    ansible.builtin.mail:
+      host: "{{ smtp_host }}"
+      port: "{{ smtp_port|int }}"
+      username: "{{ smtp_user }}"
+      password: "{{ smtp_password }}"
+      to: "{{ smtp_to }}"
+      subject: "{{subject}}"
+      body: |
+        Hola,
+
+        {{ lookup('template', 'template-message-email-ok.j2') }}
+        {{ lookup('template', 'template-message-email-error.j2') }}
+
+        Saludos,
+        Plataforma de Automatización AWX/AAP
+
+  - name: Enviar notificación ejecuccion fallida Sign/CasC slack
+    community.general.slack:
+      token: "{{ slack_api_token }}"
+      channel: "{{ slack_channel }}"
+      msg: "|
+        Hola,
+
+        {{ lookup('template', 'template-message-slack-ok.j2') }}
+        {{ lookup('template', 'template-message-slack-error.j2') }}
+
+        Saludos,
+        Plataforma de Automatización AWX/AAP"
+      username: "AWX Automation"
+      icon_emoji: "{{icon_emoji}}"
+    when: type_notification is defined and type_notification == "sign_casc"

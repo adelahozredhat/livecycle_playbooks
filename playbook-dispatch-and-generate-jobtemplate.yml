@@ -3,8 +3,8 @@
   connection: local
   gather_facts: false
   vars_files:
-    - vars/{{environment}}/controller_job_templates.yaml
-    - vars/{{environment}}/controller_projects.yaml
+    - casc/{{environment}}/controller_job_templates.yaml
+    - casc/{{environment}}/controller_projects.yaml
   vars:
     controller_configuration_projects_async_retries: 120
     controller_configuration_projects_async_delay: 2
@@ -42,9 +42,34 @@
       when: aap_oauthtoken is not defined
       tags:
         - always
-  roles:
-    - {role: clone_repository}
-    - {role: infra.controller_configuration.dispatch}
+      rescue:
+        
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              casc_execution_failed: true
+
+  tasks:
+    - name: Bloque principal para ejecutar roles protegidos
+      block:
+        # === Llamada a Roles usando include_role dentro del block ===
+
+        - name: Ejecutar Rol de Clonado Repositorio
+          ansible.builtin.include_role:
+            name: clone_repository
+
+        - name: Ejecutar Rol de Dispatch
+          ansible.builtin.include_role:
+            name: infra.controller_configuration.dispatch
+            
+        # ==========================================================
+
+      rescue:
+        
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              casc_execution_failed: true
 
   post_tasks:
     - name: "Delete the Authentication Token used"
@@ -57,4 +82,6 @@
         validate_certs: "{{ aap_validate_certs }}"
         status_code: 204
       when: aap_oauthtoken_url is defined
+
+  when: awx_webhook_payload.head_commit.message | startswith("[PROMOTE-TO-AWX]")
 ...

@@ -70,3 +70,5 @@
           ansible.builtin.set_stats:
             data: 
               sign_execution_failed: true
+              
+      when: awx_webhook_payload.head_commit.message | startswith("[PROMOTE-TO-AWX]")
