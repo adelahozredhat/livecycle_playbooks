@@ -18,14 +18,8 @@
       subject: "{{subject}}"
       body: |
         Hola,
-
         {{ lookup('template', 'template-message-email-ok-ci.j2') }}
         {{ lookup('template', 'template-message-email-error-ci.j2') }}
-
-        Ejecucion WorkFlow:
-
-        {{ url_workflow_execution }}
-
         Saludos,
         Plataforma de Automatización AWX/AAP
 
@@ -35,14 +29,8 @@
       channel: "{{ slack_channel }}"
       msg: "|
         Hola,
-
         {{ lookup('template', 'template-message-slack-ok-ci.j2') }}
         {{ lookup('template', 'template-message-slack-error-ci.j2') }}
-
-        Ejecucion WorkFlow:
-
-        {{ url_workflow_execution }}
-
         Saludos,
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"
@@ -67,14 +55,8 @@
       subject: "{{subject}}"
       body: |
         Hola,
-
         {{ lookup('template', 'template-message-email-ok-sign-casc.j2') }}
         {{ lookup('template', 'template-message-email-error-sign-casc.j2') }}
-
-        Ejecucion WorkFlow:
-
-        {{ url_workflow_execution }}
-
         Saludos,
         Plataforma de Automatización AWX/AAP
 
@@ -84,14 +66,8 @@
       channel: "{{ slack_channel }}"
       msg: "|
         Hola,
-
         {{ lookup('template', 'template-message-slack-ok-sign-casc.j2') }}
         {{ lookup('template', 'template-message-slack-error-sign-casc.j2') }}
-
-        Ejecucion WorkFlow:
-
-        {{ url_workflow_execution }}
-
         Saludos,
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"

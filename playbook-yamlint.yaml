@@ -25,3 +25,4 @@
       ansible.builtin.set_stats:
         data: 
           yamllint_execution: "{{yamllint_result}}"
+          yamllint_id_execution: "{{awx_job_id }}"

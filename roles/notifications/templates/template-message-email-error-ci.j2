@@ -1,30 +1,25 @@
 {% if clone_execution is defined and clone_execution.failed %}
 ❌Fallo en el Clonado, por favor reviselo
+{{clone_execution.stdout_lines}}
+{{clone_execution.stderr_lines}}
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{clone_id_execution}}/output
 {% endif %}
-
 {% if yamllint_execution is defined and yamllint_execution.failed %}
 ❌Fallo en el YamlLint, por favor reviselo
-
 {{yamllint_execution.stdout_lines}}
-
 {{yamllint_execution.stderr_lines}}
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{yamllint_id_execution}}/output
 {% endif %}
-
 {% if ansiblelint_execution is defined and ansiblelint_execution.failed %}
 ❌Fallo en el AnsibleLint, por favor reviselo
-
 {{ansiblelint_execution.stdout_lines}}
-
 {{ansiblelint_execution.stderr_lines}}
-
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{ansiblelint_id_execution}}/output
 {% endif %}
-
 {% if molecule_execution is defined and molecule_execution.failed %}
 ❌Fallo en el Molecules Test, por favor reviselo
-
 {{molecule_execution.stdout_lines}}
-
 {{molecule_execution.stderr_lines}}
-
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{molecule_id_execution}}/output
 {% endif %}
 URL Workflow: {{awx_url_workflow}}

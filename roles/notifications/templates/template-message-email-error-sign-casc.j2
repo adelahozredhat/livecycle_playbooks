@@ -1,7 +1,9 @@
 {% if sign_execution_failed is defined and sign_execution_failed %}
 ❌Fallo en el proceso de firmado del proyecto
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{sign_id_execution}}/output
 {% endif %}
 {% if casc_execution_failed is defined and casc_execution_failed %}
 ❌Fallo en el CasC
+URL Job Execution: https://{{aap_hostname}}/#/jobs/playbook/{{casc_id_execution}}/output
 {% endif %}
 URL Workflow: {{awx_url_workflow}}

@@ -20,6 +20,7 @@
       ansible.builtin.set_stats:
         data: 
           clone_execution: "{{clone_result}}"
+          clone_id_execution: "{{awx_job_id }}"
 
     - name: Repository error
       ansible.builtin.fail:

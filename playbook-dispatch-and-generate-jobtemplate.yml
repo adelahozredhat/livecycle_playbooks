@@ -45,6 +45,27 @@
           ansible.builtin.set_stats:
             data: 
               casc_execution_failed: true
+              casc_id_execution: "{{awx_job_id }}"
+
+  tasks:
+    - name: Bloque principal para ejecutar roles protegidos
+      block:
+        # === Llamada a Roles usando include_role dentro del block ===
+
+        - name: Ejecutar Rol de Clonado Repositorio
+          ansible.builtin.include_role:
+            name: clone_repository
+
+        - name: Ejecutar Rol de Dispatch
+          ansible.builtin.include_role:
+            name: infra.controller_configuration.dispatch
+        
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              casc_execution_failed: false
+            
+        # ==========================================================
 
         - name: Init info controller_projects
           ansible.builtin.set_stats:
@@ -126,32 +147,13 @@
           loop: "{{ jobteamplate_search_result.results }}"
           # El `loop` aquí debe coincidir con el número de resultados de la tarea anterior
 
-  tasks:
-    - name: Bloque principal para ejecutar roles protegidos
-      block:
-        # === Llamada a Roles usando include_role dentro del block ===
-
-        - name: Ejecutar Rol de Clonado Repositorio
-          ansible.builtin.include_role:
-            name: clone_repository
-
-        - name: Ejecutar Rol de Dispatch
-          ansible.builtin.include_role:
-            name: infra.controller_configuration.dispatch
-        
-        - name: Send Vars OutPut
-          ansible.builtin.set_stats:
-            data: 
-              casc_execution_failed: false
-            
-        # ==========================================================
-
       rescue:
         
         - name: Send Vars OutPut
           ansible.builtin.set_stats:
             data: 
               casc_execution_failed: true
+              casc_id_execution: "{{awx_job_id }}"
 
 
   post_tasks:
