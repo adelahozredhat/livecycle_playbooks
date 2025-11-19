@@ -3,6 +3,13 @@
   gather_facts: false
   vars:
     local_path: "/tmp/repository_clone"
+  vars:
+    controller_configuration_projects_async_retries: 120
+    controller_configuration_projects_async_delay: 2
+    aap_username: "{{ vault_controller_username | default(lookup('env', 'CONTROLLER_USERNAME')) }}"
+    aap_password: "{{ vault_controller_password | default(lookup('env', 'CONTROLLER_PASSWORD')) }}"
+    aap_hostname: "{{ vault_controller_hostname | default(lookup('env', 'CONTROLLER_HOST')) }}"
+    aap_validate_certs: "{{ vault_controller_validate_certs | default(lookup('env', 'CONTROLLER_VERIFY_SSL')) }}"
 
   tasks:
     

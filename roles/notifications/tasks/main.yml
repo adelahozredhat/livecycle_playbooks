@@ -5,7 +5,7 @@
     set_fact:
       subject: "{{ '❌ Ejecución fallida CI' if notification_type_error_ci else '✅ Ejecución correcta CI' }}"
       icon_emoji: "{{ ':x:' if notification_type_error_ci else ':rocket:' }}"
-      url_workflow_execution: "{{ aap_url_workflow }}"
+      url_workflow_execution: "{{ awx_url_workflow }}"
 
 
   - name: Enviar notificación ejecuccion fallida CI mail

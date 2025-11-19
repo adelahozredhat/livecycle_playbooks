@@ -13,8 +13,6 @@
     aap_hostname: "{{ vault_controller_hostname | default(lookup('env', 'CONTROLLER_HOST')) }}"
     aap_validate_certs: "{{ vault_controller_validate_certs | default(lookup('env', 'CONTROLLER_VERIFY_SSL')) }}"
 
-    controller_schedules_aux: "{{controller_schedules_vars| from_yaml}}"
-    controller_schedules: "{{controller_schedules_aux.controller_schedules| default([])}}"
     controller_projects_aux: "{{controller_projects_vars| from_yaml}}"
     controller_projects: "{{controller_projects_aux.controller_projects| default([])}}"
     controller_templates_aux: "{{controller_templates_vars| from_yaml}}"
