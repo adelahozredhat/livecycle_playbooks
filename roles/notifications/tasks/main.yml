@@ -1,6 +1,7 @@
 ---
 - name: Notification CI execution
   block:
+
   - name: Set var subject
     set_fact:
       subject: "{{ '❌ Ejecución fallida CI' if notification_type_error_ci else '✅ Ejecución correcta CI' }}"
@@ -35,15 +36,16 @@
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"
       icon_emoji: "{{icon_emoji}}"
+
   when: type_notification is defined and type_notification == "ci"
 
 - name: Notification Sign/CasC execution
   block:
+
   - name: Set var subject
     set_fact:
       subject: "{{ '✅ Ejecución correcta' if notification_type_error_sign_casc else '❌ Ejecución fallida' }}"
       icon_emoji: "{{ ':rocket:'  if notification_type_error_sign_casc else  ':x:' }}"
-
 
   - name: Enviar notificación ejecuccion fallida Sign/CasC mail
     ansible.builtin.mail:
@@ -72,4 +74,5 @@
         Plataforma de Automatización AWX/AAP"
       username: "AWX Automation"
       icon_emoji: "{{icon_emoji}}"
+      
   when: type_notification is defined and type_notification == "sign_casc"

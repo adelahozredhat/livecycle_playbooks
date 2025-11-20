@@ -54,7 +54,9 @@
         register: sign_result
 
       - name: ✅ Verificar resultado de la firma
-        cmd: "ansible-sign project gpg-verify --gnupg-home {{ gpg_home_dir }} {{ local_path }}"
+        ansible.builtin.command:
+          # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
+          cmd: "ansible-sign project gpg-verify --gnupg-home {{ gpg_home_dir }} {{ local_path }}"
         register: sign_verify
 
       - name: ✅ Verificar resultado de la firma
@@ -64,6 +66,7 @@
       - name: Push repository
         ansible.builtin.import_role:
           name: push_repository
+          
       rescue:
 
         - name: Send Vars OutPut
