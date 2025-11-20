@@ -17,12 +17,15 @@
     controller_projects: "{{controller_projects_aux.controller_projects| default([])}}"
     controller_templates_aux: "{{controller_templates_vars| from_yaml}}"
     controller_templates: "{{controller_templates_aux.controller_templates| default([])}}"
+    is_awx: "{{ awx_job_id is defined }}"
+    path_token: "{{ '/api/v2/tokens/' if is_awx else '/api/gateway/v1/tokens/' }}"
+    path_controller: "{{ '/api/v2/' if is_awx else '/api/controller/v2/' }}"
   tasks:
     - name: "Setup authentication (block)"
       block:
         - name: "Get the Authentication Token for the future requests"
           ansible.builtin.uri:
-            url: "https://{{ aap_hostname }}/api/gateway/v1/tokens/"
+            url: "https://{{ aap_hostname }}{{path_token}}"
             user: "{{ aap_username }}"
             password: "{{ aap_password }}"
             method: POST
@@ -46,6 +49,8 @@
             data: 
               casc_execution_failed: true
               casc_id_execution: "{{awx_job_id }}"
+
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
 
     - name: Bloque principal para ejecutar roles protegidos
       block:
@@ -73,7 +78,7 @@
 
         - name: Iterar sobre Proyectos y Buscar ID en AWX
           ansible.builtin.uri:
-            url: "{{ aap_hostname }}/api/v2/projects/"
+            url: "{{ aap_hostname }}{{path_controller}}projects/"
             method: GET
             user: "{{ aap_username }}"
             password: "{{ aap_password }}"
@@ -112,7 +117,7 @@
 
         - name: Iterar sobre Proyectos y Buscar ID en AWX
           ansible.builtin.uri:
-            url: "{{ aap_hostname }}/api/v2/job_templates/"
+            url: "{{ aap_hostname }}{{path_controller}}job_templates/"
             method: GET
             user: "{{ aap_username }}"
             password: "{{ aap_password }}"

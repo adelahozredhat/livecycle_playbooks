@@ -1,4 +1,4 @@
-{% (if casc_execution_failed is not defined or not casc_execution_failed) and (sign_execution_failed is defined and not sign_execution_failed) %}
+{% if(casc_execution_failed is not defined or not casc_execution_failed) and (sign_execution_failed is defined and not sign_execution_failed) %}
 Ejecución Complete OK ✅
 
 Url: {{awx_url_workflow}}
