@@ -44,7 +44,7 @@
 
   - name: Set var subject
     set_fact:
-      subject: "{{ '✅ Ejecución correcta' if notification_type_error_sign_casc else '❌ Ejecución fallida' }}"
+      subject: "{{ '❌ Ejecución fallida' if notification_type_error_sign_casc else '✅ Ejecución correcta' }}"
       icon_emoji: "{{ ':rocket:'  if notification_type_error_sign_casc else  ':x:' }}"
 
   - name: Enviar notificación ejecuccion fallida Sign/CasC mail
@@ -75,4 +75,4 @@
       username: "AWX Automation"
       icon_emoji: "{{icon_emoji}}"
       
-  when: type_notification is defined and type_notification == "sign_casc"
+  when: type_notification is defined and type_notification == "sign_casc" and awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
