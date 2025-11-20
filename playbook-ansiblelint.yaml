@@ -11,7 +11,10 @@
         name: clone_repository
 
     - name: AnsibleLint
-      ansible.builtin.shell: env -i /usr/bin/ansible-lint --nocolor
+      ansible.builtin.shell: "cp /etc/ansible/ansible.cfg {{ local_path }}/ansible.cfg"
+
+    - name: AnsibleLint
+      ansible.builtin.shell: ansible-lint --nocolor
       args:
         chdir: "{{ local_path }}/"
       register: ansiblelint_result
