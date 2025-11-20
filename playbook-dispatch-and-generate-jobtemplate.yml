@@ -17,7 +17,7 @@
     controller_projects: "{{controller_projects_aux.controller_projects| default([])}}"
     controller_templates_aux: "{{controller_templates_vars| from_yaml}}"
     controller_templates: "{{controller_templates_aux.controller_templates| default([])}}"
-  pre_tasks:
+  tasks:
     - name: "Setup authentication (block)"
       block:
         - name: "Get the Authentication Token for the future requests"
@@ -47,7 +47,6 @@
               casc_execution_failed: true
               casc_id_execution: "{{awx_job_id }}"
 
-  tasks:
     - name: Bloque principal para ejecutar roles protegidos
       block:
         # === Llamada a Roles usando include_role dentro del block ===
@@ -147,6 +146,17 @@
           loop: "{{ jobteamplate_search_result.results }}"
           # El `loop` aquí debe coincidir con el número de resultados de la tarea anterior
 
+        - name: "Delete the Authentication Token used"
+          ansible.builtin.uri:
+            url: "https://{{ aap_hostname }}{{aap_oauthtoken_url }}"
+            user: "{{ aap_username }}"
+            password: "{{ aap_password }}"
+            method: DELETE
+            force_basic_auth: true
+            validate_certs: "{{ aap_validate_certs }}"
+            status_code: 204
+          when: aap_oauthtoken_url is defined
+
       rescue:
         
         - name: Send Vars OutPut
@@ -155,18 +165,4 @@
               casc_execution_failed: true
               casc_id_execution: "{{awx_job_id }}"
 
-
-  post_tasks:
-    - name: "Delete the Authentication Token used"
-      ansible.builtin.uri:
-        url: "https://{{ aap_hostname }}{{aap_oauthtoken_url }}"
-        user: "{{ aap_username }}"
-        password: "{{ aap_password }}"
-        method: DELETE
-        force_basic_auth: true
-        validate_certs: "{{ aap_validate_certs }}"
-        status_code: 204
-      when: aap_oauthtoken_url is defined
-
-  when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
-...
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
