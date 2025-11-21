@@ -67,7 +67,7 @@
           state: directory
           mode: '0755'
 
-      - name: 1 Generar Checksums (replicando ansible-sign)
+      - name: 1️⃣ Generar Checksums (replicando ansible-sign)
         # Este comando genera el sha256sum de todos los archivos del proyecto.
         # El comando 'find' obtiene la lista de archivos a firmar basada en MANIFEST.in
         ansible.builtin.shell:
@@ -75,7 +75,7 @@
             cd {{ local_path }} && \
             find . -type f -print0 | xargs -0 sha256sum > .ansible-sign/sha256sum.txt
         
-      - name: 2 Firmar el Checksums con GPG puro (sin TTY)
+      - name: 2️⃣ Firmar el Checksums con GPG puro (sin TTY)
         # Firmar el archivo de checksums, inyectando la contraseña y bypassando pinentry
         ansible.builtin.command:
           cmd: "gpg --homedir {{ gpg_home_dir }} --batch --pinentry-mode loopback --passphrase-fd 0 --default-key {{ gpg_signer_fingerprint }} --output {{ local_path }}/.ansible-sign/sha256sum.txt.sig --detach-sig {{ local_path }}/.ansible-sign/sha256sum.txt"
@@ -85,7 +85,7 @@
           GNUPGHOME: "{{ gpg_home_dir }}"
         register: gpg_pure_sign_result
         
-      - name: 3 Mostrar resultado de la firma GPG pura
+      - name: 3️⃣ Mostrar resultado de la firma GPG pura
         ansible.builtin.debug:
           msg: "Firma GPG pura completada: {{ gpg_pure_sign_result.stdout }}"
 
