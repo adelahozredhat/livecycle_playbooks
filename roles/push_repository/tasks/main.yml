@@ -9,4 +9,4 @@
     - git config --global user.name "{{git_user}}"
     - git config http.sslVerify false
     - git commit -m 'Sign playbook'
-    - git push
+    - git push origin HEAD:master

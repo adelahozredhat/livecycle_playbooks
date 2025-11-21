@@ -14,54 +14,98 @@
         ansible.builtin.import_role:
           name: clone_repository
 
+      - name: ✅ Verificar resultado de la firma
+        ansible.builtin.command:
+          # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
+          cmd: "ls {{local_path}}"
+
       - name: 📁 Asegurar que el directorio GPG_HOME exista
         ansible.builtin.file:
           path: "{{ gpg_home_dir }}"
           state: directory
           mode: '0700'
 
-      - name: 📝 Crear archivo de configuración GPG batch
+      - name: 📝 Decodificar e Importar Clave Privada al EE
         ansible.builtin.copy:
-          content: "{{ gpg_key_config }}"
-          dest: /tmp/gpg_batch_config
+          content: "{{ gpg_private_key_b64 | b64decode }}"
+          dest: "/tmp/imported_private.asc"
           mode: '0600'
 
-      - name: ✨ Generar la clave GPG de forma no interactiva
+      - name: 📥 Importar la clave GPG al GNUPGHOME
         ansible.builtin.command:
-          cmd: "gpg --batch --full-generate-key /tmp/gpg_batch_config"
-          creates: "{{ gpg_home_dir }}/pubring.kbx" # Evita que se ejecute si ya existe
+          # Importar la clave y usar la passphrase del archivo batch (stdin)
+          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --import /tmp/imported_private.asc"
+          stdin: |
+            {{ gpg_passphrase }}
         environment:
-          # Define el directorio GPG_HOME para aislar la clave
           GNUPGHOME: "{{ gpg_home_dir }}"
 
-      - name: 🔎 Obtener el Fingerprint de la clave
+      - name: ✅ Establecer Fingerprint estático
+        ansible.builtin.set_fact:
+          gpg_fingerprint_value: "{{ gpg_signer_fingerprint }}"
+
+      - name: 🔎 Verificar si MANIFEST.in existe
+        ansible.builtin.stat:
+          path: /tmp/repository_clone/MANIFEST.in
+        register: manifest_stat
+
+      - name: 📝 Crear MANIFEST.in si no existe
+        ansible.builtin.copy:
+          content: |
+            include *
+            recursive-include . *
+            global-exclude .git
+            global-exclude .gitignore
+            global-exclude .gitattributes
+          dest: /tmp/repository_clone/MANIFEST.in
+          mode: '0644'
+        when: not manifest_stat.stat.exists
+
+      - name: 📁 Crear directorio de firma .ansible-sign
+        ansible.builtin.file:
+          path: /tmp/repository_clone/.ansible-sign
+          state: directory
+          mode: '0755'
+
+      - name: 1 Generar Checksums (replicando ansible-sign)
+        # Este comando genera el sha256sum de todos los archivos del proyecto.
+        # El comando 'find' obtiene la lista de archivos a firmar basada en MANIFEST.in
         ansible.builtin.shell:
-          cmd: "gpg --list-secret-keys --with-colons --with-fingerprint {{ gpg_key_email }} | awk -F: '/fpr:/ {print $10}' | head -n 1"
+          cmd: |
+            cd {{ local_path }} && \
+            find . -type f -print0 | xargs -0 sha256sum > .ansible-sign/sha256sum.txt
+        
+      - name: 2 Firmar el Checksums con GPG puro (sin TTY)
+        # Firmar el archivo de checksums, inyectando la contraseña y bypassando pinentry
+        ansible.builtin.command:
+          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --pinentry-mode loopback --passphrase-fd 0 --default-key {{ gpg_signer_fingerprint }} --output {{ local_path }}/.ansible-sign/sha256sum.txt.sig --detach-sig {{ local_path }}/.ansible-sign/sha256sum.txt"
+          stdin: "{{ gpg_passphrase }}"
+        environment:
+          # Asegura que GPG use el home directory
+          GNUPGHOME: "{{ gpg_home_dir }}"
+        register: gpg_pure_sign_result
+        
+      - name: 3 Mostrar resultado de la firma GPG pura
+        ansible.builtin.debug:
+          msg: "Firma GPG pura completada: {{ gpg_pure_sign_result.stdout }}"
+
+      - name: 🔍 Verificar la firma con GPG Puro
+        ansible.builtin.command:
+          # 1. Comando principal: gpg --verify [archivo_firma] [archivo_checksums]
+          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --verify {{ local_path }}/.ansible-sign/sha256sum.txt.sig {{ local_path }}/.ansible-sign/sha256sum.txt"
         environment:
           GNUPGHOME: "{{ gpg_home_dir }}"
-        register: gpg_fingerprint
-
-      - name: 💬 Mostrar Fingerprint de la clave (para verificación)
+        register: gpg_verify_result
+        
+      - name: 💬 Mostrar resultado de la verificación
         ansible.builtin.debug:
-          msg: "Fingerprint de la clave GPG: {{ gpg_fingerprint.stdout }}"
+          msg: "Resultado de la verificación: {{ gpg_verify_result.stdout }} {{ gpg_verify_result.stderr }}"
 
-      # --- Sección de Uso con ansible-sign ---
-
-      - name: ✍️ Firmar el archivo de prueba con ansible-sign
-        ansible.builtin.command:
-          # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
-          cmd: "ansible-sign project gpg-sign --gnupg-home {{ gpg_home_dir }} --fingerprint {{ gpg_fingerprint.stdout }} {{ local_path }}"
-        register: sign_result
-
-      - name: ✅ Verificar resultado de la firma
-        ansible.builtin.command:
-          # Usamos --gnupg-home y --fingerprint para asegurar que usemos la clave correcta
-          cmd: "ansible-sign project gpg-verify --gnupg-home {{ gpg_home_dir }} {{ local_path }}"
-        register: sign_verify
-
-      - name: ✅ Verificar resultado de la firma
-        ansible.builtin.debug:
-          msg: "Resultado de ansible-sign: {{ sign_result.stdout }}"
+      - name: 🛑 Fallar si la verificación NO fue exitosa
+        # gpg --verify regresa RC 0 en éxito. Si no es 0, algo falló (clave incorrecta, firma rota, etc.).
+        ansible.builtin.fail:
+          msg: "La verificación GPG falló: Revise los mensajes de gpg_verify_result."
+        when: gpg_verify_result.rc != 0
 
       - name: Push repository
         ansible.builtin.import_role:
@@ -74,5 +118,10 @@
             data: 
               sign_execution_failed: true
               sign_id_execution: "{{awx_job_id }}"
+
+        - name: Errors Checks
+          ansible.builtin.fail:
+            msg:  
+              - "{{ 'Fallo en el proceso de firmado del proyecto' }}"
               
       when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")

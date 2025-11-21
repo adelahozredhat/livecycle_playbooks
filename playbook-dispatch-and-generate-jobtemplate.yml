@@ -20,6 +20,7 @@
     is_awx: "{{ awx_job_id is defined }}"
     path_token: "{{ '/api/v2/tokens/' if is_awx else '/api/gateway/v1/tokens/' }}"
     path_controller: "{{ '/api/v2/' if is_awx else '/api/controller/v2/' }}"
+    local_path: "/tmp/repository_clone"
   tasks:
     - name: "Setup authentication (block)"
       block:
@@ -50,7 +51,12 @@
               casc_execution_failed: true
               casc_id_execution: "{{awx_job_id }}"
 
-      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
+        - name: Errors Checks
+          ansible.builtin.fail:
+            msg: 
+              - "{{ 'Fallo en el proceso de ejecucion del CasC error al conectar con AWX' }}"
+
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]") and sign_execution_failed is defined and not sign_execution_faile
 
     - name: Bloque principal para ejecutar roles protegidos
       block:
@@ -170,4 +176,9 @@
               casc_execution_failed: true
               casc_id_execution: "{{awx_job_id }}"
 
-      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")
+        - name: Errors Checks
+          ansible.builtin.fail:
+            msg: 
+              - "{{ 'Fallo en el proceso de ejecucion del CasC' }}"
+
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]") and sign_execution_failed is defined and not sign_execution_faile
