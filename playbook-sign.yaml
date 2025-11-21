@@ -57,7 +57,7 @@
             global-exclude .git
             global-exclude .gitignore
             global-exclude .gitattributes
-          dest: {{ local_path }}/MANIFEST.in
+          dest: "{{ local_path }}/MANIFEST.in"
           mode: '0644'
         when: not manifest_stat.stat.exists
 
@@ -73,17 +73,17 @@
           mode: '0755'
 
       - name: 1️⃣ Generar Checksums (replicando ansible-sign)
-        # Este comando genera el CHECKSUMS de todos los archivos del proyecto.
+        # Este comando genera el sha256sum de todos los archivos del proyecto.
         # El comando 'find' obtiene la lista de archivos a firmar basada en MANIFEST.in
         ansible.builtin.shell:
           cmd: |
             cd {{ local_path }} && \
-            find . -type f -print0 | xargs -0 sha256sum > .ansible-sign/CHECKSUMS.txt
+            find . -type f -print0 | xargs -0 sha256sum > .ansible-sign/sha256sum.txt
         
       - name: 2️⃣ Firmar el Checksums con GPG puro (sin TTY)
         # Firmar el archivo de checksums, inyectando la contraseña y bypassando pinentry
         ansible.builtin.command:
-          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --pinentry-mode loopback --passphrase-fd 0 --default-key {{ gpg_signer_fingerprint }} --output {{ local_path }}/.ansible-sign/CHECKSUMS.txt.sig --detach-sig {{ local_path }}/.ansible-sign/CHECKSUMS.txt"
+          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --pinentry-mode loopback --passphrase-fd 0 --default-key {{ gpg_signer_fingerprint }} --output {{ local_path }}/.ansible-sign/sha256sum.txt.sig --detach-sig {{ local_path }}/.ansible-sign/sha256sum.txt"
           stdin: "{{ gpg_passphrase }}"
         environment:
           # Asegura que GPG use el home directory
@@ -97,7 +97,7 @@
       - name: 🔍 Verificar la firma con GPG Puro
         ansible.builtin.command:
           # 1. Comando principal: gpg --verify [archivo_firma] [archivo_checksums]
-          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --verify {{ local_path }}/.ansible-sign/CHECKSUMS.txt.sig {{ local_path }}/.ansible-sign/CHECKSUMS.txt"
+          cmd: "gpg --homedir {{ gpg_home_dir }} --batch --verify {{ local_path }}/.ansible-sign/sha256sum.txt.sig {{ local_path }}/.ansible-sign/sha256sum.txt"
         environment:
           GNUPGHOME: "{{ gpg_home_dir }}"
         register: gpg_verify_result

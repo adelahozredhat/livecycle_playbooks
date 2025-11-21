@@ -3,12 +3,15 @@ Ejecución Complete OK ✅
 
 Url: {{awx_url_workflow}}
 Generate projects:
+{% if controller_info_projects}
 {% for item in controller_info_projects -%}
 {{item.name}}
 {{item.access_url}}
 
 {%  endfor -%}
+{% endif %}
 Generate JobTemplates: 
+{% if controller_info_templates}
 {% for item in controller_info_templates -%}
 {{item.name}}
 {{item.access_url}}
@@ -28,6 +31,7 @@ curl -X POST \
 "{{item.launch_url}}"
 
 {%  endfor -%}
+{% endif %}
 
 {% endif %}
 
