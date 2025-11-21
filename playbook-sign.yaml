@@ -73,7 +73,7 @@
         ansible.builtin.shell:
           cmd: |
             cd {{ local_path }} && \
-            find . -type f -print0 | xargs -0 CHECKSUMS > .ansible-sign/CHECKSUMS.txt
+            find . -type f -print0 | xargs -0 sha256sum > .ansible-sign/CHECKSUMS.txt
         
       - name: 2️⃣ Firmar el Checksums con GPG puro (sin TTY)
         # Firmar el archivo de checksums, inyectando la contraseña y bypassando pinentry
