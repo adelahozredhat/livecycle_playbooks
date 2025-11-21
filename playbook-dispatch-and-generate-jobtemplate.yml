@@ -121,7 +121,7 @@
           ansible.builtin.set_fact: 
               controller_info_templates: []
 
-        - name: Iterar sobre Proyectos y Buscar ID en AWX
+        - name: Iterar sobre Templates y Buscar ID en AWX
           ansible.builtin.uri:
             url: "https://{{ aap_hostname }}{{path_controller}}job_templates/?search={{item.name| urlencode}}"
             method: GET

@@ -9,7 +9,7 @@
       url_workflow_execution: "{{ awx_url_workflow }}"
 
 
-  - name: Enviar notificación ejecuccion fallida CI mail
+  - name: Enviar notificación fallida CI mail
     ansible.builtin.mail:
       host: "{{ smtp_host }}"
       port: "{{ smtp_port|int }}"
@@ -24,7 +24,7 @@
         Saludos,
         Plataforma de Automatización AWX/AAP
 
-  - name: Enviar notificación ejecuccion fallida CI slack
+  - name: Enviar notificación ejecuccion CI slack
     community.general.slack:
       token: "{{ slack_api_token }}"
       channel: "{{ slack_channel }}"
@@ -47,7 +47,7 @@
       subject: "{{ '❌ Ejecución fallida' if notification_type_error_sign_casc else '✅ Ejecución correcta' }}"
       icon_emoji: "{{ ':rocket:'  if notification_type_error_sign_casc else  ':x:' }}"
 
-  - name: Enviar notificación ejecuccion fallida Sign/CasC mail
+  - name: Enviar notificación ejecuccion Sign/CasC mail
     ansible.builtin.mail:
       host: "{{ smtp_host }}"
       port: "{{ smtp_port|int }}"
@@ -62,7 +62,7 @@
         Saludos,
         Plataforma de Automatización AWX/AAP
 
-  - name: Enviar notificación ejecuccion fallida Sign/CasC slack
+  - name: Enviar notificación ejecuccion Sign/CasC slack
     community.general.slack:
       token: "{{ slack_api_token }}"
       channel: "{{ slack_channel }}"

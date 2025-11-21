@@ -46,7 +46,7 @@
 
       - name: 🔎 Verificar si MANIFEST.in existe
         ansible.builtin.stat:
-          path: /tmp/repository_clone/MANIFEST.in
+          path: "/tmp/repository_clone/MANIFEST.in"
         register: manifest_stat
 
       - name: 📝 Crear MANIFEST.in si no existe
@@ -57,13 +57,18 @@
             global-exclude .git
             global-exclude .gitignore
             global-exclude .gitattributes
-          dest: /tmp/repository_clone/MANIFEST.in
+          dest: {{ local_path }}/MANIFEST.in
           mode: '0644'
         when: not manifest_stat.stat.exists
 
+      - name: 🧹 Limpiar firma anterior (Opcional)
+        ansible.builtin.file:
+          path: "{{ local_path }}/.ansible-sign"
+          state: absent
+
       - name: 📁 Crear directorio de firma .ansible-sign
         ansible.builtin.file:
-          path: /tmp/repository_clone/.ansible-sign
+          path: "{{ local_path }}/.ansible-sign"
           state: directory
           mode: '0755'
 
