@@ -2,9 +2,6 @@
 - hosts: all
   connection: local
   gather_facts: false
-  vars_files:
-    - casc/{{environment}}/controller_job_templates.yaml
-    - casc/{{environment}}/controller_projects.yaml
   vars:
     controller_configuration_projects_async_retries: 120
     controller_configuration_projects_async_delay: 2
@@ -56,7 +53,7 @@
             msg: 
               - "{{ 'Fallo en el proceso de ejecucion del CasC error al conectar con AWX' }}"
 
-      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]") and sign_execution_failed is defined and not sign_execution_faile
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]")  and (sign_execution_failed is not defined or not sign_execution_faile)
 
     - name: Bloque principal para ejecutar roles protegidos
       block:
@@ -65,6 +62,14 @@
         - name: Ejecutar Rol de Clonado Repositorio
           ansible.builtin.include_role:
             name: clone_repository
+
+        - name: Cargar CasC JobTemplates
+          ansible.builtin.include_vars:
+            file: "/tmp/repository_clone/casc/dev/controller_job_templates.yaml" 
+
+        - name: Cargar CasC Projects
+          ansible.builtin.include_vars:
+            file: "/tmp/repository_clone/casc/dev/controller_projects.yaml" 
 
         - name: Ejecutar Rol de Dispatch
           ansible.builtin.include_role:
@@ -78,29 +83,24 @@
         # ==========================================================
 
         - name: Init info controller_projects
-          ansible.builtin.set_stats:
-            data: 
+          ansible.builtin.set_fact: 
               controller_info_projects: []
 
         - name: Iterar sobre Proyectos y Buscar ID en AWX
           ansible.builtin.uri:
-            url: "{{ aap_hostname }}{{path_controller}}projects/"
+            url: "https://{{ aap_hostname }}{{path_controller}}projects/?search={{item.name| urlencode}}"
             method: GET
             user: "{{ aap_username }}"
             password: "{{ aap_password }}"
             validate_certs: no
             status_code: 200
+            force_basic_auth: yes
+            return_content: yes
             # Filtramos por el nombre del proyecto actual
             # AWX usa el filtro 'name__iexact' o 'name'
             # Esto requiere que tu AWX esté accesible y configurado.
-            body_format: json
-            query:
-              name: "{{ item.name }}"
           register: project_search_result
           loop: "{{ controller_projects }}"
-          # Importante: Usamos `loop_control` para mantener la información del proyecto original
-          loop_control:
-            loop_var: controller_projects
 
         - name: Construir la Nueva Lista con Nombre y URL
           ansible.builtin.set_fact:
@@ -108,38 +108,34 @@
           vars:
             # Obtenemos el ID del primer resultado de la búsqueda
             # Asume que el proyecto existe y que la búsqueda devuelve al menos un resultado.
-            project_id: "{{ item.json.results[0].id | default(None) }}"
+            id: "{{ item.json.results[0].id | default(None) }}"
             # Creamos el nuevo elemento a añadir a la lista
             new_item:
               name: "{{ item.json.results[0].name }}"
+              project_id: "{{id}}"
               # Generamos la URL usando el ID encontrado
-              access_url: "{{ awx_host }}/#/projects/{{ project_id }}"
+              access_url: "https://{{ aap_hostname }}/#/projects/{{ id }}"
           loop: "{{ project_search_result.results }}"
 
         - name: Init info controller_templates
-          ansible.builtin.set_stats:
-            data: 
+          ansible.builtin.set_fact: 
               controller_info_templates: []
 
         - name: Iterar sobre Proyectos y Buscar ID en AWX
           ansible.builtin.uri:
-            url: "{{ aap_hostname }}{{path_controller}}job_templates/"
+            url: "https://{{ aap_hostname }}{{path_controller}}job_templates/?search={{item.name| urlencode}}"
             method: GET
             user: "{{ aap_username }}"
             password: "{{ aap_password }}"
             validate_certs: no
             status_code: 200
+            force_basic_auth: yes
+            return_content: yes
             # Filtramos por el nombre del proyecto actual
             # AWX usa el filtro 'name__iexact' o 'name'
             # Esto requiere que tu AWX esté accesible y configurado.
-            body_format: json
-            query:
-              name: "{{ item.name }}"
           register: jobteamplate_search_result
           loop: "{{ controller_templates }}"
-          # Importante: Usamos `loop_control` para mantener la información del proyecto original
-          loop_control:
-            loop_var: controller_templates
 
         - name: Construir la Nueva Lista con Nombre y URL
           ansible.builtin.set_fact:
@@ -147,15 +143,22 @@
           vars:
             # Obtenemos el ID del primer resultado de la búsqueda
             # Asume que el proyecto existe y que la búsqueda devuelve al menos un resultado.
-            job_teamplate_id: "{{ item.json.results[0].id | default(None) }}"
+            id: "{{ item.json.results[0].id | default(None) }}"
             # Creamos el nuevo elemento a añadir a la lista
             new_item:
               name: "{{ item.json.results[0].name }}"
+              job_template_id: "{{ id }}"
               # Generamos la URL usando el ID encontrado
-              access_url: "{{ awx_host }}/#/job_templates/{{ job_teamplate_id }}"
-              launch_url: "{{ awx_host }}/#/job_templates/{{ job_teamplate_id }}/launch/"
+              access_url: "https://{{ aap_hostname }}/#/job_templates/{{ id }}"
+              launch_url: "https://{{ aap_hostname }}/api/v2/job_templates/{{ id }}/launch/"
           loop: "{{ jobteamplate_search_result.results }}"
           # El `loop` aquí debe coincidir con el número de resultados de la tarea anterior
+        
+        - name: Send Vars OutPut
+          ansible.builtin.set_stats:
+            data: 
+              controller_info_projects: "{{controller_info_projects }}"
+              controller_info_templates: "{{controller_info_templates}}"
 
         - name: "Delete the Authentication Token used"
           ansible.builtin.uri:
@@ -181,4 +184,4 @@
             msg: 
               - "{{ 'Fallo en el proceso de ejecucion del CasC' }}"
 
-      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]") and sign_execution_failed is defined and not sign_execution_faile
+      when: awx_webhook_payload.head_commit.message.startswith("[PROMOTE-TO-AWX]") and (sign_execution_failed is not defined or not sign_execution_faile)

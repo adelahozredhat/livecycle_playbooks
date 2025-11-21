@@ -1,4 +1,4 @@
-{% if( casc_execution_failed is not defined or not casc_execution_failed) and (sign_execution_failed is defined and not sign_execution_failed) %}
+{% if(casc_execution_failed is not defined or not casc_execution_failed) and (sign_execution_failed is not defined or not sign_execution_faile) %}
 Ejecución Complete OK ✅
 
 Url: {{awx_url_workflow}}
@@ -6,7 +6,17 @@ Generate project: XXX
 Generate JobTemplate: XXX
 To launch fro curl or another integration:
 
-End Point:
+curl -X POST \
+-H "Authorization: Bearer **TU_TOKEN_PERSONAL_DE_ACCESO**" \
+-H "Content-Type: application/json" \
+--data "{
+    \"inventory_id\": **ID_DEL_INVENTARIO_OPCIONAL**,
+    \"extra_vars\": {
+        \"clave1\": \"valor1\",
+        \"clave2\": \"valor2\"
+    }
+}" \
+"**https://awx.tudominio.com**/api/v2/job_templates/**42**/launch/"
 
 
 Curl Example:
